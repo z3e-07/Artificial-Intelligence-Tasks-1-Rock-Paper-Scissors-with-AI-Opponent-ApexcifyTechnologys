@@ -1,0 +1,26 @@
+import random
+
+choices = ["rock", "paper", "scissors"]
+
+while True:
+    user_choice = input("Rock, Paper, or Scissors? (or 'quit' to stop): ").lower()
+    
+    if user_choice == "quit":
+        print("Game Over!")
+        break
+    if user_choice not in choices:
+        print("Invalid choice! Try again.")
+        continue
+    
+    ai_choice = random.choice(choices)
+    print(f"AI chose: {ai_choice}")
+
+    # Game logic
+    if user_choice == ai_choice:
+        print("It's a tie!")
+    elif (user_choice == "rock" and ai_choice == "scissors") or \
+         (user_choice == "paper" and ai_choice == "rock") or \
+         (user_choice == "scissors" and ai_choice == "paper"):
+        print("You win!")
+    else:
+        print("AI wins!")
