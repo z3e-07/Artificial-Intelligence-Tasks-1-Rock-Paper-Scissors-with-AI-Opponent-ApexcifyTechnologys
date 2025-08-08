@@ -1,1 +1,79 @@
+# Step 1: Install required libraries (only first time)
+!pip install nltk scikit-learn --quiet
 
+# Step 2: Import required modules
+import nltk
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Download NLTK resources
+nltk.download('punkt')
+nltk.download('stopwords')
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+# Step 3: Define FAQ dataset (you can customize this)
+faq_data = {
+    "What is your return policy?": "Our return policy allows returns within 30 days of purchase.",
+    "How can I track my order?": "You can track your order using the tracking number sent to your email.",
+    "What payment methods do you accept?": "We accept credit cards, debit cards, and PayPal.",
+    "Do you ship internationally?": "Yes, we ship to most countries worldwide.",
+    "How do I reset my password?": "Click on 'Forgot Password' at login and follow the instructions."
+}
+
+questions = list(faq_data.keys())
+answers = list(faq_data.values())
+
+#  Step 4: Preprocessing function
+def preprocess(text):
+    tokens = word_tokenize(text.lower())
+    words = [word for word in tokens if word.isalnum()]
+    filtered = [word for word in words if word not in stopwords.words('english')]
+    return " ".join(filtered)
+
+# Preprocess all questions
+processed_questions = [preprocess(q) for q in questions]
+
+#  Step 5: TF-IDF Vectorization
+vectorizer = TfidfVectorizer()
+tfidf_matrix = vectorizer.fit_transform(processed_questions)
+
+#  Step 6: Chat interface (text-based for Colab)
+def chatbot_response(user_input):
+    processed_input = preprocess(user_input)
+    input_vec = vectorizer.transform([processed_input])
+    similarity = cosine_similarity(input_vec, tfidf_matrix)
+    max_sim_index = similarity.argmax()
+    max_sim_score = similarity[0][max_sim_index]
+    
+    if max_sim_score > 0.3:
+        return answers[max_sim_index]
+    else:
+        return "Sorry, I couldn't understand your question. Please try again."
+
+#  Step 7: Interactive cell for user input (use repeatedly)
+from IPython.display import display
+import ipywidgets as widgets
+
+def run_chatbot():
+    input_box = widgets.Text(placeholder='Ask me something...', description='You:')
+    output_box = widgets.Output()
+
+    def on_submit(sender):
+        user_input = input_box.value
+        if user_input.lower() == "exit":
+            response = "Goodbye! 👋"
+        else:
+            response = chatbot_response(user_input)
+        with output_box:
+            print(f"You: {user_input}")
+            print(f"Chatbot: {response}\n")
+        input_box.value = ''  # Clear input
+
+    input_box.on_submit(on_submit)
+    display(input_box, output_box)
+
+#  Step 8: Run this function to start chatting!
+run_chatbot()
